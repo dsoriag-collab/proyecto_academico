@@ -1,0 +1,57 @@
+TAREA 1 - SISTEMA ACADÉMICO EN PYTHON
+Guía 2: CRUD en Python con MVC, herencia, polimorfismo y colecciones
+
+CARPETAS Y ARCHIVOS
+proyecto_academico/
+    main.py                    Vista: menús y entradas de usuario
+    views.py                   Controlador: CRUD, búsquedas, validaciones
+    models.py                  Modelos: ModeloBase, Persona, Estudiante, Materia, Matricula
+    shared/
+        __init__.py
+        herramientas.py        Funciones para imprimir y validar email (igual que en la guía)
+        json_manager.py        Gestión de archivos JSON (igual que en la guía)
+    data/
+        estudiantes.json       Ejemplo: Ana Pérez
+        materias.json          Ejemplo: Cálculo I, 29 cupos restantes
+        matriculas.json        Ejemplo: matrícula de Ana, 16.5 de nota
+
+CÓMO EJECUTAR
+1. Descomprime el archivo ZIP.
+2. Abre la carpeta proyecto_academico en Visual Studio Code.
+3. Abre la terminal de VS Code (Terminal -> Nuevo terminal).
+4. Escribe: python main.py
+   Si este comando no funciona en Windows, prueba: py main.py
+5. Usa el menú con las opciones numéricas.
+
+MENÚ PRINCIPAL
+1. Estudiantes
+2. Materias
+3. Matrículas
+4. Resumen
+0. Salir
+
+PRUEBA DE EJEMPLO YA INCLUIDA
+- Estudiante n.º 1: Ana Pérez, EST2026001, Software.
+- Materia n.º 1: Cálculo I, MAT101, 4 créditos, 29 cupos.
+- Matrícula n.º 1: Ana en Cálculo I, periodo 2026-1, nota 16.5.
+- En el submenú Matrículas, elige '4. Ver certificado' e introduce 1.
+- Para comprobar la devolución de cupo, retira la matrícula n.º 1
+  y después consulta la materia n.º 1: sus cupos vuelven a 30.
+
+REGLAS INCLUIDAS
+- Carnet de estudiante y email únicos.
+- Código de materia único.
+- Créditos entre 1 y 10 y cupos entre 0 y 30.
+- Se descuenta un cupo al matricular y se devuelve al retirar.
+- No se permite la misma matrícula para estudiante, materia y periodo.
+- Nota entre 0 y 20; nota aprobatoria a partir de 14.
+- El estado se calcula con el método estado(), sin almacenarse en JSON.
+- No se puede eliminar a estudiantes o materias con matrículas activas.
+
+NOTA
+El programa incluye los tres registros de demostración que aparecen
+como ejemplo en la sección 16.6 de la guía. Puedes editarlos mediante
+el menú o vaciar el contenido de los tres archivos JSON, dejando []
+en cada uno, para trabajar desde cero.
+
+No necesita instalar ninguna biblioteca externa: solo Python 3.

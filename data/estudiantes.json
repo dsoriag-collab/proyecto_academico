@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "nombre": "Ana",
+    "apellido": "Pérez",
+    "email": "ana@u.edu",
+    "carnet": "EST2026001",
+    "carrera": "Software"
+  },
+  {
+    "id": 2,
+    "nombre": "Pa",
+    "apellido": "Fiumbar",
+    "email": "pafiumbar@unemi.edu.ec",
+    "carnet": "FIUMBI67676767",
+    "carrera": "Sixseven"
+  }
+]
