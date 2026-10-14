@@ -1,19 +1,25 @@
-"""VISTA: menús, input() y print(). Todas las reglas están en views.py."""
-
 from shared.herramientas import (
     imprimir_titulo, imprimir_exito, imprimir_error, imprimir_info, confirmar
 )
-import views
+from views import ClienteController, ProductoController, VentaController
+
+# Se crea UN solo controlador de cada tipo.
+# A ventas se le pasan los MISMOS clientes y productos.
+clientes = ClienteController()
+productos = ProductoController()
+ventas = VentaController(clientes, productos)
 
 
 # =====================================================================
-# AYUDAS DE PANTALLA: las dos funciones de presentación son genéricas
+# AYUDAS DE PANTALLA
 # =====================================================================
+
 def pausa():
     input("\nPresione Enter para continuar...")
 
 
 def pedir_entero(etiqueta):
+    """Devuelve un entero o None si el usuario escribió otra cosa."""
     try:
         return int(input(etiqueta))
     except ValueError:
@@ -21,6 +27,7 @@ def pedir_entero(etiqueta):
 
 
 def mostrar_resultado(exito, mensaje):
+    # Los controladores devuelven la TUPLA (exito, mensaje)
     if exito:
         imprimir_exito(mensaje)
     else:
@@ -28,7 +35,7 @@ def mostrar_resultado(exito, mensaje):
 
 
 def mostrar_lista(objetos, vacio="No hay registros todavía."):
-    """Sirve para estudiantes, materias y matrículas: cada modelo sabe mostrarse."""
+    """Sirve para clientes, productos y ventas: cada modelo sabe mostrarse."""
     if not objetos:
         imprimir_info(vacio)
         return
@@ -43,275 +50,305 @@ def mostrar_detalle(objeto):
         print(f"  {str(clave).replace('_', ' ').capitalize():<16}: {valor}")
 
 
-def pedir_cambios(objeto, campos):
-    print("Deje vacío el campo que no desee modificar.\n")
-    cambios = {}
-    for campo in campos:
-        actual = getattr(objeto, campo)
-        nuevo = input(f"{campo.capitalize()} [{actual}]: ").strip()
-        if nuevo:
-            cambios[campo] = nuevo
-    return cambios
-
-
 # =====================================================================
-# ESTUDIANTES
+# MENÚ DE CLIENTES
 # =====================================================================
-def crear_estudiante():
-    imprimir_titulo("CREAR ESTUDIANTE")
+
+def crear_cliente():
+    imprimir_titulo("CREAR CLIENTE")
     datos = {
         "nombre": input("Nombre: "),
         "apellido": input("Apellido: "),
         "email": input("Email: "),
-        "carnet": input("Carnet: "),
-        "carrera": input("Carrera: "),
+        "telefono": input("Teléfono: "),
+        "ciudad": input("Ciudad: "),
     }
-    mostrar_resultado(*views.crear_estudiante(datos))
+    mostrar_resultado(*clientes.crear(datos))
     pausa()
 
 
-def listar_estudiantes():
-    imprimir_titulo("ESTUDIANTES")
-    mostrar_lista(views.obtener_estudiantes(), "Todavía no hay estudiantes.")
+def listar_clientes():
+    imprimir_titulo("CLIENTES")
+    mostrar_lista(clientes.leer(), "Todavía no hay clientes.")
     pausa()
 
 
-def buscar_estudiante():
-    imprimir_titulo("BUSCAR ESTUDIANTES")
-    termino = input("Nombre, apellido, email, carnet o carrera: ")
-    mostrar_lista(views.buscar_estudiantes(termino), "No se encontraron estudiantes.")
+def buscar_cliente():
+    imprimir_titulo("BUSCAR CLIENTE")
+    termino = input("Nombre, email, teléfono o ciudad: ")
+    encontrados = clientes.buscar(termino)
+    mostrar_lista(encontrados, f"Ningún cliente coincide con '{termino}'.")
     pausa()
 
 
-def ver_estudiante():
-    imprimir_titulo("VER ESTUDIANTE POR ID")
-    estudiante = views.obtener_estudiante(pedir_entero("Id: "))
-    if estudiante is None:
-        imprimir_error("Estudiante no encontrado")
+def ver_cliente():
+    imprimir_titulo("VER CLIENTE POR ID")
+    cliente = clientes.obtener(pedir_entero("Id: "))
+    if cliente is None:
+        imprimir_error("No encontrado")
     else:
-        mostrar_detalle(estudiante)
+        mostrar_detalle(cliente)
     pausa()
 
 
-def actualizar_estudiante():
-    imprimir_titulo("ACTUALIZAR ESTUDIANTE")
-    id_estudiante = pedir_entero("Id: ")
-    estudiante = views.obtener_estudiante(id_estudiante)
-    if estudiante is None:
-        imprimir_error("Estudiante no encontrado")
-    else:
-        imprimir_info(f"Editando: {estudiante.etiqueta()}")
-        cambios = pedir_cambios(estudiante, ("nombre", "apellido", "email", "carnet", "carrera"))
-        mostrar_resultado(*views.actualizar_estudiante(id_estudiante, cambios))
+def actualizar_cliente():
+    imprimir_titulo("ACTUALIZAR CLIENTE")
+    id_cliente = pedir_entero("Id: ")
+    cliente = clientes.obtener(id_cliente)
+    if cliente is None:
+        imprimir_error("No encontrado")
+        return pausa()
+
+    imprimir_info(f"Editando: {cliente.etiqueta()}")
+    print("Deje en blanco lo que no quiera cambiar.\n")
+
+    cambios = {}
+    for campo in ("nombre", "apellido", "email", "telefono", "ciudad"):
+        actual = getattr(cliente, campo)
+        nuevo = input(f"{campo.capitalize()} [{actual}]: ").strip()
+        if nuevo:
+            cambios[campo] = nuevo
+
+    mostrar_resultado(*clientes.actualizar(id_cliente, cambios))
     pausa()
 
 
-def eliminar_estudiante():
-    imprimir_titulo("ELIMINAR ESTUDIANTE")
-    id_estudiante = pedir_entero("Id: ")
-    estudiante = views.obtener_estudiante(id_estudiante)
-    if estudiante is None:
-        imprimir_error("Estudiante no encontrado")
+def eliminar_cliente():
+    imprimir_titulo("ELIMINAR CLIENTE")
+    id_cliente = pedir_entero("Id: ")
+    cliente = clientes.obtener(id_cliente)
+    if cliente is None:
+        imprimir_error("No encontrado")
+        return pausa()
+
+    imprimir_info(f"Se eliminará: {cliente.etiqueta()}")
+    if confirmar("¿Confirma?"):
+        mostrar_resultado(*clientes.eliminar(id_cliente))
     else:
-        imprimir_info(f"Se eliminará: {estudiante.etiqueta()}")
-        if confirmar("¿Confirma?"):
-            mostrar_resultado(*views.eliminar_estudiante(id_estudiante))
-        else:
-            imprimir_info("Operación cancelada")
+        imprimir_info("Operación cancelada")
     pausa()
 
 
 # =====================================================================
-# MATERIAS
+# MENÚ DE PRODUCTOS
 # =====================================================================
-def crear_materia():
-    imprimir_titulo("CREAR MATERIA")
+
+def crear_producto():
+    imprimir_titulo("CREAR PRODUCTO")
     datos = {
         "nombre": input("Nombre: "),
-        "codigo": input("Código (ej. MAT101): "),
-        "creditos": input("Créditos (1 a 10): "),
-        "cupos": input("Cupos (0 a 30): "),
+        "precio": input("Precio: "),
+        "stock": input("Stock: "),
     }
-    mostrar_resultado(*views.crear_materia(datos))
+    mostrar_resultado(*productos.crear(datos))
     pausa()
 
 
-def listar_materias():
-    imprimir_titulo("MATERIAS")
-    mostrar_lista(views.obtener_materias(), "Todavía no hay materias.")
+def listar_productos():
+    imprimir_titulo("PRODUCTOS")
+    mostrar_lista(productos.leer(), "Todavía no hay productos.")
     pausa()
 
 
-def buscar_materia():
-    imprimir_titulo("BUSCAR MATERIAS")
-    termino = input("Nombre o código: ")
-    mostrar_lista(views.buscar_materias(termino), "No se encontraron materias.")
+def buscar_producto():
+    imprimir_titulo("BUSCAR PRODUCTO")
+    termino = input("Nombre: ")
+    mostrar_lista(productos.buscar(termino), "Sin coincidencias.")
     pausa()
 
 
-def ver_materia():
-    imprimir_titulo("VER MATERIA POR ID")
-    materia = views.obtener_materia(pedir_entero("Id: "))
-    if materia is None:
-        imprimir_error("Materia no encontrada")
+def ver_producto():
+    imprimir_titulo("VER PRODUCTO POR ID")
+    producto = productos.obtener(pedir_entero("Id: "))
+    if producto is None:
+        imprimir_error("No encontrado")
     else:
-        mostrar_detalle(materia)
+        mostrar_detalle(producto)
+        imprimir_info(f"Precio con IVA: ${producto.con_iva(producto.precio):.2f}")
     pausa()
 
 
-def actualizar_materia():
-    imprimir_titulo("ACTUALIZAR MATERIA")
-    id_materia = pedir_entero("Id: ")
-    materia = views.obtener_materia(id_materia)
-    if materia is None:
-        imprimir_error("Materia no encontrada")
-    else:
-        imprimir_info(f"Editando: {materia.etiqueta()}")
-        cambios = pedir_cambios(materia, ("nombre", "codigo", "creditos", "cupos"))
-        mostrar_resultado(*views.actualizar_materia(id_materia, cambios))
+def actualizar_producto():
+    imprimir_titulo("ACTUALIZAR PRODUCTO")
+    id_producto = pedir_entero("Id: ")
+    producto = productos.obtener(id_producto)
+    if producto is None:
+        imprimir_error("No encontrado")
+        return pausa()
+
+    imprimir_info(f"Editando: {producto.etiqueta()}")
+    print("Deje en blanco lo que no quiera cambiar.\n")
+
+    cambios = {}
+    for campo in ("nombre", "precio", "stock"):
+        actual = getattr(producto, campo)
+        nuevo = input(f"{campo.capitalize()} [{actual}]: ").strip()
+        if nuevo:
+            cambios[campo] = nuevo
+
+    mostrar_resultado(*productos.actualizar(id_producto, cambios))
     pausa()
 
 
-def eliminar_materia():
-    imprimir_titulo("ELIMINAR MATERIA")
-    id_materia = pedir_entero("Id: ")
-    materia = views.obtener_materia(id_materia)
-    if materia is None:
-        imprimir_error("Materia no encontrada")
+def eliminar_producto():
+    imprimir_titulo("ELIMINAR PRODUCTO")
+    id_producto = pedir_entero("Id: ")
+    producto = productos.obtener(id_producto)
+    if producto is None:
+        imprimir_error("No encontrado")
+        return pausa()
+
+    imprimir_info(f"Se eliminará: {producto.etiqueta()}")
+    if confirmar("¿Confirma?"):
+        mostrar_resultado(*productos.eliminar(id_producto))
     else:
-        imprimir_info(f"Se eliminará: {materia.etiqueta()}")
-        if confirmar("¿Confirma?"):
-            mostrar_resultado(*views.eliminar_materia(id_materia))
-        else:
-            imprimir_info("Operación cancelada")
+        imprimir_info("Operación cancelada")
     pausa()
 
 
 # =====================================================================
-# MATRÍCULAS
+# MENÚ DE VENTAS
 # =====================================================================
-def matricular():
-    imprimir_titulo("CREAR MATRÍCULA")
+
+def registrar_venta():
+    imprimir_titulo("REGISTRAR VENTA")
+    imprimir_info("Clientes:")
+    mostrar_lista(clientes.leer())
+    imprimir_info("Productos:")
+    mostrar_lista(productos.leer())
+
     datos = {
-        "estudiante_id": pedir_entero("Id del estudiante: "),
-        "materia_id": pedir_entero("Id de la materia: "),
-        "periodo": input("Periodo (ej. 2026-1): "),
+        "cliente_id": pedir_entero("\nId del cliente: "),
+        "producto_id": pedir_entero("Id del producto: "),
+        "cantidad": pedir_entero("Cantidad: "),
     }
-    mostrar_resultado(*views.crear_matricula(datos))
+    if None in datos.values():
+        imprimir_error("Todos los datos deben ser números enteros")
+        return pausa()
+
+    mostrar_resultado(*ventas.crear(datos))
     pausa()
 
 
-def listar_matriculas():
-    imprimir_titulo("MATRÍCULAS")
-    mostrar_lista(views.obtener_matriculas(), "Todavía no hay matrículas.")
+def listar_ventas():
+    imprimir_titulo("VENTAS")
+    mostrar_lista(ventas.leer(), "Todavía no hay ventas.")
     pausa()
 
 
-def registrar_nota():
-    imprimir_titulo("REGISTRAR NOTA")
-    id_matricula = pedir_entero("Id de la matrícula: ")
-    nota = input("Nueva nota (0 a 20): ")
-    mostrar_resultado(*views.registrar_nota(id_matricula, nota))
-    pausa()
-
-
-def ver_certificado():
-    imprimir_titulo("CERTIFICADO DE MATRÍCULA")
-    id_matricula = pedir_entero("Id de la matrícula: ")
-    resultado = views.certificado(id_matricula)
-    if resultado is None:
-        imprimir_error("Matrícula no encontrada")
+def ver_comprobante():
+    imprimir_titulo("COMPROBANTE")
+    texto = ventas.comprobante(pedir_entero("Id de la venta: "))
+    if texto is None:
+        imprimir_error("No existe esa venta")
     else:
-        print(resultado)
+        print(texto)
     pausa()
 
 
-def retirar_matricula():
-    imprimir_titulo("RETIRAR MATRÍCULA")
-    id_matricula = pedir_entero("Id de la matrícula: ")
-    matricula = views.obtener_matricula(id_matricula)
-    if matricula is None:
-        imprimir_error("Matrícula no encontrada")
+def anular_venta():
+    imprimir_titulo("ANULAR VENTA")
+    id_venta = pedir_entero("Id de la venta: ")
+    if id_venta and confirmar("Se devolverá el stock. ¿Confirma?"):
+        mostrar_resultado(*ventas.eliminar(id_venta))
     else:
-        imprimir_info(f"Se retirará: {matricula.etiqueta()}")
-        if confirmar("¿Confirma?"):
-            mostrar_resultado(*views.retirar_matricula(id_matricula))
-        else:
-            imprimir_info("Operación cancelada")
+        imprimir_info("Operación cancelada")
     pausa()
 
 
 def resumen():
-    imprimir_titulo("RESUMEN ACADÉMICO")
-    datos = views.resumen_academico()
-    print(f"Estudiantes registrados: {datos['estudiantes']}")
-    print(f"Carreras distintas: {', '.join(datos['carreras']) or 'ninguna'}")
-    print(f"Materias sin cupo: {len(datos['materias_sin_cupo'])}")
-    mostrar_lista(datos["materias_sin_cupo"], "Ninguna materia está sin cupo.")
-    print(f"Matrículas aprobadas: {datos['matriculas_aprobadas']}")
+    imprimir_titulo("RESUMEN")
+    print(f"  Clientes  : {len(clientes.leer())}")
+    print(f"  Ciudades  : {', '.join(clientes.ciudades()) or '-'}")
+    print(f"  Productos : {len(productos.leer())}")
+    bajos = productos.con_stock_bajo()
+    print(f"  Stock bajo: {', '.join(p.nombre for p in bajos) or 'ninguno'}")
+    print(f"  Ventas    : {len(ventas.leer())}")
+    print(f"  Vendido   : ${ventas.total_vendido():.2f}")
     pausa()
 
 
 # =====================================================================
-# MENÚS
+# MENÚS: DICCIONARIOS tecla -> (texto, función)
 # =====================================================================
+
+MENU_CLIENTES = {
+    "1": ("Crear cliente", crear_cliente),
+    "2": ("Ver todos", listar_clientes),
+    "3": ("Buscar", buscar_cliente),
+    "4": ("Ver por id", ver_cliente),
+    "5": ("Actualizar", actualizar_cliente),
+    "6": ("Eliminar", eliminar_cliente),
+    "0": ("Volver", None),
+}
+
+MENU_PRODUCTOS = {
+    "1": ("Crear producto", crear_producto),
+    "2": ("Ver todos", listar_productos),
+    "3": ("Buscar", buscar_producto),
+    "4": ("Ver por id", ver_producto),
+    "5": ("Actualizar", actualizar_producto),
+    "6": ("Eliminar", eliminar_producto),
+    "0": ("Volver", None),
+}
+
+MENU_VENTAS = {
+    "1": ("Registrar venta", registrar_venta),
+    "2": ("Ver todas", listar_ventas),
+    "3": ("Ver comprobante", ver_comprobante),
+    "4": ("Anular venta", anular_venta),
+    "0": ("Volver", None),
+}
+
+
 def ejecutar_menu(titulo, opciones):
-    # DICCIONARIO: vincula cada número del menú con texto y función.
+    """Un solo bucle para los tres submenús."""
     while True:
         imprimir_titulo(titulo)
-        for clave, (descripcion, _) in opciones.items():
-            print(f"  {clave}. {descripcion}")
-        print("  0. Volver / salir")
-        eleccion = input("\nElija una opción: ").strip()
-        if eleccion == "0":
-            return
-        if eleccion in opciones:
-            opciones[eleccion][1]()
+        for tecla, (texto, _funcion) in opciones.items():
+            print(f"  {tecla}. {texto}")
+        print()
+
+        tecla = input("Opción: ").strip()
+        if tecla not in opciones:               # búsqueda por clave: instantánea
+            imprimir_error("Opción no válida")
+            pausa()
+            continue
+
+        _texto, funcion = opciones[tecla]
+        if funcion is None:                      # la opción "Volver"
+            break
+        funcion()
+
+
+def main():
+    while True:
+        imprimir_titulo("SISTEMA DE VENTAS")
+        print("  1. Clientes")
+        print("  2. Productos")
+        print("  3. Ventas")
+        print("  4. Resumen")
+        print("  0. Salir\n")
+
+        tecla = input("Opción: ").strip()
+        if tecla == "1":
+            ejecutar_menu("CLIENTES", MENU_CLIENTES)
+        elif tecla == "2":
+            ejecutar_menu("PRODUCTOS", MENU_PRODUCTOS)
+        elif tecla == "3":
+            ejecutar_menu("VENTAS", MENU_VENTAS)
+        elif tecla == "4":
+            resumen()
+        elif tecla == "0":
+            imprimir_info("¡Hasta luego! 👋")
+            break
         else:
             imprimir_error("Opción no válida")
             pausa()
 
 
-def menu_estudiantes():
-    ejecutar_menu("ESTUDIANTES", {
-        "1": ("Crear", crear_estudiante),
-        "2": ("Ver todos", listar_estudiantes),
-        "3": ("Buscar", buscar_estudiante),
-        "4": ("Ver por ID", ver_estudiante),
-        "5": ("Actualizar", actualizar_estudiante),
-        "6": ("Eliminar", eliminar_estudiante),
-    })
-
-
-def menu_materias():
-    ejecutar_menu("MATERIAS", {
-        "1": ("Crear", crear_materia),
-        "2": ("Ver todas", listar_materias),
-        "3": ("Buscar", buscar_materia),
-        "4": ("Ver por ID", ver_materia),
-        "5": ("Actualizar", actualizar_materia),
-        "6": ("Eliminar", eliminar_materia),
-    })
-
-
-def menu_matriculas():
-    ejecutar_menu("MATRÍCULAS", {
-        "1": ("Matricular", matricular),
-        "2": ("Ver todas", listar_matriculas),
-        "3": ("Registrar nota", registrar_nota),
-        "4": ("Ver certificado", ver_certificado),
-        "5": ("Retirar matrícula", retirar_matricula),
-    })
-
-
-def main():
-    ejecutar_menu("SISTEMA ACADÉMICO", {
-        "1": ("Estudiantes", menu_estudiantes),
-        "2": ("Materias", menu_materias),
-        "3": ("Matrículas", menu_matriculas),
-        "4": ("Resumen", resumen),
-    })
-
-
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nPrograma interrumpido por el usuario.")
